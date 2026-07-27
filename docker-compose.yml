@@ -1,0 +1,16 @@
+services:
+  cine-app:
+    build: .
+    container_name: tanstack-cine
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Sincronizamos la zona horaria para que el reset dominical no falle
+      - TZ=America/Mexico_City
+      - APP_PASSWORD=Tamiko666
+    volumes:
+      # Conectamos tu carpeta física de películas al entorno de Docker en modo solo lectura
+      - ./peliculas:/movies:ro
+      # Aseguramos que el state.json sobreviva a los reinicios
+      - ./app_data:/data
