@@ -94,7 +94,7 @@ function Dashboard() {
           <Film className="mx-auto h-12 w-12 text-gray-400 animate-pulse" />
           <h2 className="mt-4 text-2xl font-bold text-white">No Movies Found</h2>
           <p className="mt-2 text-sm text-gray-400">
-            Please copy some <code>.mp4</code> files (max 40) into the movies folder to begin.
+            Please copy some <code>.mp4</code> files (max 80) into the movies folder to begin.
           </p>
         </div>
       </main>
@@ -264,12 +264,12 @@ function Dashboard() {
                 </div>
 
                 <div className="text-center mb-6">
-                  {isWatchedToday && movie.filename ? (
+                  {isWatchedToday ? (
                     <div>
-                      <h3 className="font-bold text-lg text-white truncate max-w-full px-2" title={movie.filename}>
-                        {movie.filename.replace(/\.[^/.]+$/, "")}
+                      <h3 className="font-bold text-lg text-white truncate max-w-full px-2">
+                        Mystery Movie
                       </h3>
-                      <p className="text-xs text-gray-400 mt-1">Unlocked & Available</p>
+                      <p className="text-xs font-semibold text-[#60d7cf] mt-1">Unlocked & Available</p>
                     </div>
                   ) : (
                     <div>
@@ -351,7 +351,7 @@ function Dashboard() {
           <CheckCircle2 className="mx-auto h-8 w-8 text-[#6ec89a]" />
           <h3 className="mt-2 font-bold text-white">All Weekly Screenings Completed</h3>
           <p className="mt-1 text-xs text-gray-400">
-            You have watched all 3 movies for this week. Come back Sunday at 12:00 AM for the next batch!
+            You have watched all 3 movies for this week. Come back Monday at 12:00 AM for the next batch!
           </p>
         </section>
       )}

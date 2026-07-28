@@ -46,7 +46,6 @@ export const Route = createFileRoute('/watch/$filename')({
 
 function WatchPlayer() {
   const { filename } = Route.useLoaderData()
-  const cleanTitle = filename.replace(/\.[^/.]+$/, '')
 
   return (
     <div className="min-h-screen bg-[#05090b] text-white flex flex-col">
@@ -62,8 +61,8 @@ function WatchPlayer() {
           </Link>
           <div className="flex items-center gap-2 max-w-[50%]">
             <Film className="h-4 w-4 text-[#60d7cf] flex-shrink-0" />
-            <h1 className="text-sm font-bold truncate text-gray-200" title={cleanTitle}>
-              {cleanTitle}
+            <h1 className="text-sm font-bold truncate text-gray-200">
+              Secret Screening
             </h1>
           </div>
           <div className="w-24 hidden sm:block" /> {/* Balance spacer */}

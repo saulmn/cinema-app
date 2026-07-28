@@ -5,38 +5,39 @@ import { getWeekStart, getLocalDateString, getMoviesList } from './state.server'
 
 describe('Movies App State & Logic Tests', () => {
   describe('getLocalDateString', () => {
-    it('should format date as YYYY-MM-DD', () => {
-      const testDate = new Date(2026, 5, 18) // June 18, 2026 (0-indexed month)
+    it('should format date as YYYY-MM-DD in Mexico City time', () => {
+      const testDate = new Date('2026-06-18T12:00:00Z')
       const formatted = getLocalDateString(testDate)
       expect(formatted).toBe('2026-06-18')
     })
   })
 
   describe('getWeekStart', () => {
-    it('should find Sunday midnight (00:00:00) for a given Wednesday', () => {
+    it('should find Monday midnight (00:00:00 Mexico Time) for a given Wednesday', () => {
       // Wednesday, June 17, 2026
-      const date = new Date(2026, 5, 17, 14, 30, 0)
+      const date = new Date('2026-06-17T14:30:00-06:00')
       const start = getWeekStart(date)
+      const startStr = getLocalDateString(start)
       
-      expect(start.getDay()).toBe(0) // Sunday
-      expect(start.getFullYear()).toBe(2026)
-      expect(start.getMonth()).toBe(5) // June
-      expect(start.getDate()).toBe(14) // Sunday before June 17 is June 14
-      expect(start.getHours()).toBe(0)
-      expect(start.getMinutes()).toBe(0)
-      expect(start.getSeconds()).toBe(0)
+      expect(startStr).toBe('2026-06-15') // Monday before June 17 is June 15
     })
 
-    it('should find today midnight if date is Sunday 10:00 AM', () => {
+    it('should find Monday midnight if date is Sunday 10:00 AM', () => {
       // Sunday, June 21, 2026 at 10:00 AM
-      const date = new Date(2026, 5, 21, 10, 0, 0)
+      const date = new Date('2026-06-21T10:00:00-06:00')
       const start = getWeekStart(date)
+      const startStr = getLocalDateString(start)
 
-      expect(start.getDay()).toBe(0) // Sunday
-      expect(start.getFullYear()).toBe(2026)
-      expect(start.getMonth()).toBe(5) // June
-      expect(start.getDate()).toBe(21) // Same day
-      expect(start.getHours()).toBe(0)
+      expect(startStr).toBe('2026-06-15') // Monday of that week is June 15
+    })
+
+    it('should find Monday midnight if date is Monday 10:00 AM', () => {
+      // Monday, June 22, 2026 at 10:00 AM
+      const date = new Date('2026-06-22T10:00:00-06:00')
+      const start = getWeekStart(date)
+      const startStr = getLocalDateString(start)
+
+      expect(startStr).toBe('2026-06-22') // Monday is June 22
     })
   })
 
@@ -72,13 +73,13 @@ describe('Movies App State & Logic Tests', () => {
       expect(list).toContain('movie2.MP4')
     })
 
-    it('should throw an error if more than 40 .mp4 files are present', () => {
-      // Create 41 dummy mp4 files
-      for (let i = 1; i <= 41; i++) {
+    it('should throw an error if more than 80 .mp4 files are present', () => {
+      // Create 81 dummy mp4 files
+      for (let i = 1; i <= 81; i++) {
         fs.writeFileSync(`./test_movies_dir/movie_${i}.mp4`, '')
       }
 
-      expect(() => getMoviesList()).toThrow(/restricted to a maximum of 40/)
+      expect(() => getMoviesList()).toThrow(/restricted to a maximum of 80/)
     })
   })
 })

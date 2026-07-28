@@ -9,7 +9,7 @@ export interface MovieOption {
 }
 
 export interface AppState {
-  currentWeekStart: string; // ISO string of Sunday 12:00 AM
+  currentWeekStart: string; // ISO string of Monday 12:00 AM Mexico Time
   selectedMovies: MovieOption[];
   watchedMoviesHistory: string[]; // filenames of all watched movies in the current cycle
   lastWeekSelected: string[]; // filenames of movies selected last week
@@ -26,21 +26,31 @@ export function getStatePath(): string {
   return process.env.STATE_PATH || './state.json';
 }
 
-// Helper to format local date as YYYY-MM-DD
+// Helper to format date in America/Mexico_City as YYYY-MM-DD
 export function getLocalDateString(date: Date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Mexico_City',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  return formatter.format(date);
 }
 
-// Helper to calculate the start of the week (Sunday at 12:00 AM / 00:00:00)
-export function getWeekStart(date: Date): Date {
-  const result = new Date(date);
-  result.setHours(0, 0, 0, 0);
-  const day = result.getDay(); // 0 is Sunday, 1 is Monday, etc.
-  result.setDate(result.getDate() - day);
-  return result;
+// Helper to calculate the start of the week (Monday at 12:00 AM / 00:00:00 Mexico Time)
+export function getWeekStart(date: Date = new Date()): Date {
+  const dateStr = getLocalDateString(date);
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const d = new Date(Date.UTC(year, month - 1, day));
+  const utcDay = d.getUTCDay();
+  const daysToMonday = (utcDay + 6) % 7;
+  d.setUTCDate(d.getUTCDate() - daysToMonday);
+
+  const monYear = d.getUTCFullYear();
+  const monMonth = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const monDay = String(d.getUTCDate()).padStart(2, '0');
+
+  return new Date(`${monYear}-${monMonth}-${monDay}T00:00:00-06:00`);
 }
 
 // Helper to get all MP4 files from the movie directory
@@ -54,8 +64,8 @@ export function getMoviesList(): string[] {
   const files = fs.readdirSync(dir);
   const mp4Files = files.filter(f => f.toLowerCase().endsWith('.mp4'));
 
-  if (mp4Files.length > 40) {
-    throw new Error(`The directory contains ${mp4Files.length} MP4 files. The app is restricted to a maximum of 40 files.`);
+  if (mp4Files.length > 80) {
+    throw new Error(`The directory contains ${mp4Files.length} MP4 files. The app is restricted to a maximum of 80 files.`);
   }
 
   return mp4Files;
