@@ -21,29 +21,28 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy configuration files needed for Vite preview server
+# Copiamos archivos de configuración y proyecto completos
 COPY --from=builder /app/package.json /app/package-lock.json* ./
 COPY --from=builder /app/vite.config.ts ./
 COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/tsr.config.json ./
+COPY --from=builder /app/src ./src
 
-# Install dependencies (Vite is required to execute the preview/Vinxi engine)
-RUN npm ci
+# 💡 CORRECCIÓN CLAVE: El flag --include=dev fuerza la instalación de plugins de Vite
+RUN npm ci --include=dev
 
-# Copy client/server build assets
+# Copiamos el build previamente compilado
 COPY --from=builder /app/dist ./dist
 
-# Create target directories for volume mounts
+# Creamos carpetas de volúmenes
 RUN mkdir -p /movies /data
 
-# Default configurations (can be overridden during docker run)
+# Variables de entorno predeterminadas
 ENV MOVIES_DIR=/movies
 ENV STATE_PATH=/data/state.json
 ENV APP_PASSWORD=movies
 ENV PORT=3000
 
-# Expose production port
 EXPOSE 3000
 
-# Start server using Vite preview, bound to all network interfaces
 CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "3000"]
