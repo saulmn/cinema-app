@@ -1,0 +1,12 @@
+# Ignorar carpetas de medios / películas
+movies_dir/
+videos/
+*.mp4
+*.mkv
+*.avi
+
+# Ignorar dependencias locales y archivos del sistema
+node_modules/
+.git/
+.ds_store
+dist/
