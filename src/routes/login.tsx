@@ -16,7 +16,7 @@ export const loginFn = createServerFn({ method: 'POST' })
 
     setCookie('auth_session', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.SECURE_COOKIE === 'true',
       sameSite: 'lax',
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 1 week
@@ -39,7 +39,7 @@ export const logoutFn = createServerFn({ method: 'POST' })
   .handler(async () => {
     setCookie('auth_session', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.SECURE_COOKIE === 'true',
       sameSite: 'lax',
       path: '/',
       maxAge: 0, // Immediately expire
