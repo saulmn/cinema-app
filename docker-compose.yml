@@ -11,6 +11,6 @@ services:
       - APP_PASSWORD=Tamiko666
     volumes:
       # Conectamos tu carpeta física de películas al entorno de Docker en modo solo lectura
-      - ./movies_dir/:ro
+      - ./movies_dir/movies:ro
       # Aseguramos que el state.json sobreviva a los reinicios
       - ./app_data:/data
