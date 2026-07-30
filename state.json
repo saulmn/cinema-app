@@ -1,29 +1,10 @@
 {
-  "currentWeekStart": "2026-06-14T06:00:00.000Z",
+  "currentWeekStart": "2026-07-27T06:00:00.000Z",
   "selectedMovies": [
-    {
-      "filename": "uso.mp4",
-      "watched": true,
-      "watchedAt": "2026-06-17"
-    },
-    {
-      "filename": "bond.mp4",
-      "watched": false,
-      "watchedAt": null
-    },
-    {
-      "filename": "payton.mp4",
-      "watched": false,
-      "watchedAt": null
-    }
   ],
   "watchedMoviesHistory": [
-    "uso.mp4"
   ],
   "lastWeekSelected": [
-    "Documentary_Nature.mp4",
-    "Comedy_Special.mp4",
-    "SciFi_Thriller.mp4"
   ],
   "sessionToken": "1db7b6c3-b33e-447d-9081-f9ac0a940f6d"
 }
