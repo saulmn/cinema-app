@@ -12,6 +12,7 @@ export interface AppState {
   currentWeekStart: string; // ISO string of Monday 12:00 AM Mexico Time
   selectedMovies: MovieOption[];
   watchedMoviesHistory: string[]; // filenames of all watched movies in the current cycle
+  displayedMoviesHistory: string[]; // filenames of all selected/displayed movies in the current cycle
   lastWeekSelected: string[]; // filenames of movies selected last week
   sessionToken: string;
 }
@@ -96,13 +97,40 @@ export function loadState(): AppState {
     currentWeekStart: '',
     selectedMovies: [],
     watchedMoviesHistory: [],
+    displayedMoviesHistory: [],
     lastWeekSelected: [],
     sessionToken: crypto.randomUUID()
   };
 
   if (!fs.existsSync(statePath)) {
-    saveState(defaultState);
-    return defaultState;
+    // Check fallback paths for pre-existing state files to prevent state loss across environment / path changes
+    const fallbackPaths = ['./app_data/state.json', './state.json'];
+    let migratedState: AppState | null = null;
+
+    for (const fbPath of fallbackPaths) {
+      if (fbPath !== statePath && fs.existsSync(fbPath)) {
+        try {
+          const raw = fs.readFileSync(fbPath, 'utf-8');
+          const parsed = JSON.parse(raw);
+          migratedState = {
+            currentWeekStart: parsed.currentWeekStart || '',
+            selectedMovies: parsed.selectedMovies || [],
+            watchedMoviesHistory: parsed.watchedMoviesHistory || [],
+            displayedMoviesHistory: parsed.displayedMoviesHistory || parsed.watchedMoviesHistory || [],
+            lastWeekSelected: parsed.lastWeekSelected || [],
+            sessionToken: parsed.sessionToken || crypto.randomUUID()
+          };
+          console.log(`Migrated state from ${fbPath} to ${statePath}`);
+          break;
+        } catch (err) {
+          console.error(`Error reading fallback state file ${fbPath}:`, err);
+        }
+      }
+    }
+
+    const stateToSave = migratedState || defaultState;
+    saveState(stateToSave);
+    return stateToSave;
   }
 
   try {
@@ -114,6 +142,7 @@ export function loadState(): AppState {
       currentWeekStart: parsed.currentWeekStart || '',
       selectedMovies: parsed.selectedMovies || [],
       watchedMoviesHistory: parsed.watchedMoviesHistory || [],
+      displayedMoviesHistory: parsed.displayedMoviesHistory || parsed.watchedMoviesHistory || [],
       lastWeekSelected: parsed.lastWeekSelected || [],
       sessionToken: parsed.sessionToken || crypto.randomUUID()
     };
@@ -181,40 +210,37 @@ export function getAppState(): { state: AppState; error?: string } {
   // If the week start has changed, OR if any selected movie has disappeared from disk, trigger a new roll
   if (state.currentWeekStart !== weekStartStr || missingSelected) {
     const lastWeekSelected = state.selectedMovies.map(m => m.filename);
-    let watched = state.watchedMoviesHistory;
-    
-    // Filter out movies that have been deleted from disk from the watched history
-    watched = watched.filter(filename => allMovies.includes(filename));
+    let watched = state.watchedMoviesHistory.filter(filename => allMovies.includes(filename));
+    let displayed = (state.displayedMoviesHistory || []).filter(filename => allMovies.includes(filename));
 
-    // Calculate the pool of unwatched movies
-    let pool = allMovies.filter(m => !watched.includes(m));
+    // Exclude all movies already shown or watched in this cycle
+    const seenMovies = Array.from(new Set([...displayed, ...watched]));
+
+    // Calculate the pool of unseen/unwatched movies in the current cycle
+    let unseenPool = allMovies.filter(m => !seenMovies.includes(m));
     
     let selected: string[] = [];
     const targetCount = Math.min(3, allMovies.length);
 
     if (targetCount > 0) {
-      // Candidates excluding last week's selected movies
-      const candidates = pool.filter(m => !lastWeekSelected.includes(m));
-      
-      if (candidates.length >= targetCount) {
-        selected = chooseRandom(candidates, targetCount);
+      if (unseenPool.length >= targetCount) {
+        selected = chooseRandom(unseenPool, targetCount);
       } else {
-        // Fallback to full unwatched pool if excluding last week is too restrictive
-        if (pool.length >= targetCount) {
-          selected = chooseRandom(pool, targetCount);
-        } else {
-          // Unwatched pool is exhausted, reset history
-          selected = [...pool];
-          const remainingNeeded = targetCount - selected.length;
-          
-          watched = []; // Reset the global cycle!
-          
-          const newPool = allMovies.filter(m => !selected.includes(m));
-          const additional = chooseRandom(newPool, Math.min(remainingNeeded, newPool.length));
-          selected = [...selected, ...additional];
-        }
+        // Pool exhausted or smaller than target count -> start with remaining unseen
+        selected = [...unseenPool];
+        const remainingNeeded = targetCount - selected.length;
+        
+        // Reset cycle histories since the entire library pool has been cycled!
+        displayed = [];
+        watched = [];
+
+        const refreshedPool = allMovies.filter(m => !selected.includes(m));
+        const additional = chooseRandom(refreshedPool, Math.min(remainingNeeded, refreshedPool.length));
+        selected = [...selected, ...additional];
       }
     }
+
+    displayed = Array.from(new Set([...displayed, ...selected]));
 
     state.currentWeekStart = weekStartStr;
     state.lastWeekSelected = lastWeekSelected;
@@ -224,6 +250,7 @@ export function getAppState(): { state: AppState; error?: string } {
       watchedAt: null
     }));
     state.watchedMoviesHistory = watched;
+    state.displayedMoviesHistory = displayed;
     
     saveState(state);
   }
@@ -269,3 +296,4 @@ export function openMovieToday(index: number): { filename: string } | { error: s
   saveState(state);
   return { filename: selectedMovie.filename };
 }
+
